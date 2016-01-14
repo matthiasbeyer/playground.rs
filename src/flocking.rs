@@ -13,7 +13,7 @@ pub struct FSLock<FE: FileExt> {
     locked_obj: RwLock<FE>,
 }
 
-pub type Result<E> = RResult<RResult<(), IOError>, E>;
+pub type Result<Succ> = RResult<Succ, IOError>;
 
 impl<FE: FileExt> FSLock<FE> {
 
@@ -24,31 +24,59 @@ impl<FE: FileExt> FSLock<FE> {
     }
 
     pub fn read(&self) -> Result<LockResult<RwLockReadGuard<FE>>> {
-        self.locked_obj
-            .read()
-            .map(|obj| obj.deref().lock_shared())
-            .map_err(|e| Err(e))
+        let read = self.locked_obj.read();
+        if let Ok(r) = read {
+            let e = r.deref().lock_shared();
+            if e.is_err() {
+                return Err(e.err().unwrap());
+            } else {
+                Ok(Ok(r))
+            }
+        } else {
+            Ok(read)
+        }
     }
 
     pub fn try_read(&self) -> Result<TryLockResult<RwLockReadGuard<FE>>> {
-        self.locked_obj
-            .try_read()
-            .map(|obj| obj.deref().try_lock_shared())
-            .map_err(|e| Err(e))
+        let read = self.locked_obj.try_read();
+        if let Ok(r) = read {
+            let e = r.deref().try_lock_shared();
+            if e.is_err() {
+                return Err(e.err().unwrap());
+            } else {
+                Ok(Ok(r))
+            }
+        } else {
+            Ok(read)
+        }
     }
 
     pub fn write(&self) -> Result<LockResult<RwLockWriteGuard<FE>>> {
-        self.locked_obj
-            .write()
-            .map(|obj| obj.deref().lock_exclusive())
-            .map_err(|e| Err(e))
+        let read = self.locked_obj.write();
+        if let Ok(r) = read {
+            let e = r.deref().lock_exclusive();
+            if e.is_err() {
+                return Err(e.err().unwrap());
+            } else {
+                Ok(Ok(r))
+            }
+        } else {
+            Ok(read)
+        }
     }
 
     pub fn try_write(&self) -> Result<TryLockResult<RwLockWriteGuard<FE>>> {
-        self.locked_obj
-            .try_write()
-            .map(|obj| obj.deref().try_lock_exclusive())
-            .map_err(|e| Err(e))
+        let read = self.locked_obj.try_write();
+        if let Ok(r) = read {
+            let e = r.deref().try_lock_exclusive();
+            if e.is_err() {
+                return Err(e.err().unwrap());
+            } else {
+                Ok(Ok(r))
+            }
+        } else {
+            Ok(read)
+        }
     }
 
     pub fn is_poisoned(&self) -> bool {
