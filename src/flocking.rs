@@ -101,3 +101,47 @@ impl<FE: FileExt> Drop for FSLock<FE> {
 
 }
 
+#[cfg(test)]
+mod test {
+
+    #[test]
+    fn test_threaded_rw() {
+        use std::fs::File;
+        use std::io::Read;
+        use std::io::Write;
+        use std::ops::Deref;
+        use std::sync::Arc;
+        use std::thread;
+
+        use super::FSLock;
+
+        let file = File::create("/tmp/test-flocking.tmp").unwrap();
+        let lock = Arc::new(FSLock::new(file));
+
+        let t1_lock = lock.clone();
+        let t1 = thread::spawn(move || {
+            for i in 0..25 {
+                t1_lock.write()
+                    .map(|o| {
+                        o.map(|file| file.deref().write_fmt(format_args!("{}", i)))
+                    }).ok();
+            };
+        });
+
+        let t2_lock = lock.clone();
+        let t2 = thread::spawn(move || {
+            for _ in 0..50 {
+                let mut s = String::new();
+                t2_lock.read()
+                    .map(|o| {
+                        o.map(|file| file.deref().read_to_string(&mut s))
+                    }).ok();
+            };
+        });
+
+        assert!(t1.join().is_ok());
+        assert!(t2.join().is_ok());
+    }
+
+}
+
