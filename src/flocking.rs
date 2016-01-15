@@ -135,7 +135,7 @@ mod test {
 
         let t1_lock = lock.clone();
         let t1 = thread::spawn(move || {
-            for i in 0..25 {
+            for i in 0..250 {
                 t1_lock.write()
                     .map(|o| {
                         o.map(|file| file.deref().write_fmt(format_args!("{}", i)))
@@ -145,7 +145,7 @@ mod test {
 
         let t2_lock = lock.clone();
         let t2 = thread::spawn(move || {
-            for _ in 0..50 {
+            for _ in 0..500 {
                 let mut s = String::new();
                 t2_lock.read()
                     .map(|o| {
