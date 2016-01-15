@@ -195,5 +195,41 @@ mod test {
         assert!(t2.join().is_ok());
     }
 
+    #[test]
+    fn test_rw_threaded_printing() {
+        use std::thread::sleep_ms;
+        use std::thread;
+
+        let lock = get_new_testing_file();
+
+        let t1_lock = lock.clone();
+        let t2_lock = lock.clone();
+
+        let t1 = thread::spawn(move || {
+            t1_lock.write().map(|_| {
+                println!("[T][RW-Threaded] Start write: sleeping...");
+                for _ in 0..1500 {
+                    sleep_ms(5);
+                };
+                println!("[T][RW-Threaded] write finished.");
+            })
+            .ok();
+        });
+
+        let t2 = thread::spawn(move || {
+            t2_lock.read().map(|_| {
+                println!("[T][RW-Threaded] Start read: sleeping...");
+                for _ in 0..1500 {
+                    sleep_ms(5);
+                };
+                println!("[T][RW-Threaded] read finished.");
+            })
+            .ok();
+        });
+
+        assert!(t1.join().is_ok());
+        assert!(t2.join().is_ok());
+    }
+
 }
 
