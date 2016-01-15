@@ -6,3 +6,6 @@ authors = ["Matthias Beyer <mail@beyermatthias.de>"]
 [dependencies]
 fs2 = "0.2.2"
 
+[dev-dependencies]
+tempdir = "0.3"
+
