@@ -106,27 +106,32 @@ mod test {
 
     extern crate tempdir;
 
-    #[test]
-    fn test_threaded_rw() {
-        use std::fs::File;
-        use std::io::Read;
-        use std::io::Write;
-        use std::ops::Deref;
-        use std::sync::Arc;
-        use std::thread;
+    use std::sync::Arc;
+    use std::fs::File;
+
+    use super::FSLock;
+
+    fn get_new_testing_file() -> Arc<FSLock<File>> {
         use std::fs::OpenOptions;
-
-        use super::FSLock;
-
-        let tempdir  = tempdir::TempDir::new("flocking").unwrap();
-        let path     = tempdir.path().join("flocking");
-        let mut file = OpenOptions::new()
+        let tempdir = tempdir::TempDir::new("flocking").unwrap();
+        let path    = tempdir.path().join("flocking");
+        let file    = OpenOptions::new()
                                     .read(true)
                                     .write(true)
                                     .create(true)
                                     .open(&path)
                                     .unwrap();
-        let lock = Arc::new(FSLock::new(file));
+        Arc::new(FSLock::new(file))
+    }
+
+    #[test]
+    fn test_threaded_rw() {
+        use std::io::Read;
+        use std::io::Write;
+        use std::ops::Deref;
+        use std::thread;
+
+        let lock = get_new_testing_file();
 
         let t1_lock = lock.clone();
         let t1 = thread::spawn(move || {
