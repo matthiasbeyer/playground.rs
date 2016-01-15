@@ -104,6 +104,8 @@ impl<FE: FileExt> Drop for FSLock<FE> {
 #[cfg(test)]
 mod test {
 
+    extern crate tempdir;
+
     #[test]
     fn test_threaded_rw() {
         use std::fs::File;
