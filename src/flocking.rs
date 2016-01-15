@@ -114,10 +114,18 @@ mod test {
         use std::ops::Deref;
         use std::sync::Arc;
         use std::thread;
+        use std::fs::OpenOptions;
 
         use super::FSLock;
 
-        let file = File::create("/tmp/test-flocking.tmp").unwrap();
+        let tempdir  = tempdir::TempDir::new("flocking").unwrap();
+        let path     = tempdir.path().join("flocking");
+        let mut file = OpenOptions::new()
+                                    .read(true)
+                                    .write(true)
+                                    .create(true)
+                                    .open(&path)
+                                    .unwrap();
         let lock = Arc::new(FSLock::new(file));
 
         let t1_lock = lock.clone();
